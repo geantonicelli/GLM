@@ -3,33 +3,48 @@
 \name{es}
 \alias{es}
 \alias{\alias{es}}
-\title{function to check if a set of contrasts for a variable are orthogonal and consistent}
+\title{function to check if a set of contrasts for a variable are orthogonal and
+consistent}
 \usage{
 es(data, dep, contrast, dig = 3)
 }
 \arguments{
-\item{dig}{}
+\item{data}{a character string without '' specifying a data.frame object with
+the data, each variable must be in only one column, one dummy variable with
+weights (in one column) for each contrast to be analysed must be provided}
+
+\item{dep}{a character string without '' specifying the name of the dependent
+variable, this must be at the same time a column name in the data object}
+
+\item{contrast}{a character string without '' specifying the name of the
+contrast to be analysed, this must be at the same time the name of a column
+for a dummy variable with weights specifying which samples should be
+compared}
+
+\item{dig}{numeric an integer specifying the number of decimal digits to be
+printed out and also invisibly returned by the mes() function}
 }
 \value{
-the function returns an object of class 'pml' of the 'phangorn'
-package. Advanced and elaborated plots can be drawn in later steps based on
-the tree data of the pml class object
+the function returns invisibly a data.frame with all coefficients
+from the calculation of effect size, in addition it prints out a summary
+with the most important coefficients
 }
 \description{
 this function is a wrapper around the functions
 \code{'\link[seqinr]{dist.alignment}'}, \code{'\link[ape]{dist.dna}'},
 \code{'\link[ape]{nj}'}, \code{'\link[ape]{bionj}'},
 \code{'\link[ape]{fastme.bal}'}, \code{'\link[ape]{fastme.ols}'},
-\code{'\link[phangorn]{pml}'} and \code{'\link[phangorn]{optim.pml}'}. it takes a sequences alignment in
-format 'alignment' of 'DNAbin' matrix and perform all transformations and steps
-to calculate a phylogenetic distance matrix based on similarity or identity
-in the case of proteins or based in evolutionary models in the case of DNA or
-RNA, to perform a likelihood-based phylogenetic clustering and to optimise the phylogeny by a
-maximum likelihood algorithm
+\code{'\link[phangorn]{pml}'} and \code{'\link[phangorn]{optim.pml}'}. it
+takes a sequences alignment in format 'alignment' of 'DNAbin' matrix and
+perform all transformations and steps to calculate a phylogenetic distance
+matrix based on similarity or identity in the case of proteins or based in
+evolutionary models in the case of DNA or RNA, to perform a likelihood-based
+phylogenetic clustering and to optimise the phylogeny by a maximum likelihood
+algorithm
 }
 \examples{
-data(fastaRNA)
-data(phylipProt)
+data(gogglesDataES)
+data(depressionDataES)
 mytree <- max_likelihood(fastaRNA, type=RNA, clustering=fastme.bal,
                         pml.model=GTR, clean=FALSE)
 \dontrun{mytree <- max_likelihood(phylipProt, type=protein, pml.model=Blosum62,
