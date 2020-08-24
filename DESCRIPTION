@@ -1,18 +1,18 @@
 Package: GLM
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
-Authors@R: 
-    person(given = "First",
-           family = "Last",
-           role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+Title: set of wrapper and adapter functions for statistical analysis
+Version: 0.0.1.0
+Depends: R (>= 2.10.0)
+Imports: tidyverse pastecs compute.es
+Authors@R: person(given="esteban",
+                  family="antonicelli",
+                  role=c("aut", "cre"),
+                  email="esteban.antonicelli@gmail.com")
+Author: esteban antonicelli [aut, cre]
+Mantainer: esteban antonicelli <esteban.antonicelli@gmail.com>
+Description: simplify the execution of algorithms for general lineal models and ANOVA, from homogenity of variance, descriptive statistics, aov() and lm() to contrasts, post-hoc analysis, simple effects and robust methods.
+License: GPL (>= 2)
+URL: https://github.com/geantonicelli/GLM
 Encoding: UTF-8
 LazyData: true
-Roxygen: list(markdown = TRUE)
+Roxygen: list(markdown=TRUE)
 RoxygenNote: 7.1.1
-Depends: 
-    R (>= 2.10)
