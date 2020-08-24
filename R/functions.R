@@ -77,7 +77,7 @@ check_contrasts <- function(variable){
 #' RNA, to perform a likelihood-based phylogenetic clustering and to optimise the phylogeny by a
 #' maximum likelihood algorithm
 #'
-#' @param variable
+#' @param anova
 #'
 #' @return the function returns an object of class 'pml' of the 'phangorn'
 #'   package. Advanced and elaborated plots can be drawn in later steps based on
@@ -131,3 +131,73 @@ omega_factorial <- function(anova){
                             print(paste('omega-squared B : ', varB/varTotal), quote=FALSE)
                             print(paste('omega-squared AB: ', varAB/varTotal), quote=FALSE)
                             }
+
+#' function to check if a set of contrasts for a variable are orthogonal and consistent
+#'
+#' this function is a wrapper around the functions
+#' \code{'\link[seqinr]{dist.alignment}'}, \code{'\link[ape]{dist.dna}'},
+#' \code{'\link[ape]{nj}'}, \code{'\link[ape]{bionj}'},
+#' \code{'\link[ape]{fastme.bal}'}, \code{'\link[ape]{fastme.ols}'},
+#' \code{'\link[phangorn]{pml}'} and \code{'\link[phangorn]{optim.pml}'}. it takes a sequences alignment in
+#' format 'alignment' of 'DNAbin' matrix and perform all transformations and steps
+#' to calculate a phylogenetic distance matrix based on similarity or identity
+#' in the case of proteins or based in evolutionary models in the case of DNA or
+#' RNA, to perform a likelihood-based phylogenetic clustering and to optimise the phylogeny by a
+#' maximum likelihood algorithm
+#'
+#' @param data
+#' @param dep
+#' @param contrast
+#' @param dig
+#'
+#' @return the function returns an object of class 'pml' of the 'phangorn'
+#'   package. Advanced and elaborated plots can be drawn in later steps based on
+#'   the tree data of the pml class object
+#'
+#' @author gerardo esteban antonicelli
+#'
+#' @seealso \code{'\link{retrieve_seqs}'} \code{'\link{print_alignment}'}
+#'   \code{'\link{clean_alignment}'} \code{'\link{load_alignment}'}
+#'   \code{'\link{make_tree}'} \code{'\link{max_parsimony}'}
+#'
+#' @aliases \alias{es}
+#'
+#' @examples
+#' data(fastaRNA)
+#' data(phylipProt)
+#' mytree <- max_likelihood(fastaRNA, type=RNA, clustering=fastme.bal,
+#'                         pml.model=GTR, clean=FALSE)
+#' \dontrun{mytree <- max_likelihood(phylipProt, type=protein, pml.model=Blosum62,
+#'                         outgroup=YP_0010399)}
+#' \dontrun{plot.phylo(mytree, type='u')}
+#'
+#' @importFrom tidyverse filter count
+#' @importFrom pastecs by
+#' @importFrom compute.es mes
+#'
+#' @export
+es <- function(data, dep, contrast, dig=3){
+               filter <- substitute(contrast)
+               compare <- data %>% filter(!eval(filter)==0)
+               count <- compare %>% count(eval(filter))
+               stats <- by(eval(substitute(compare$dep)),
+                           eval(substitute(compare$contrast)),
+                           stat.desc, basic=FALSE)
+               m.1 <- stats[[1]][[2]]
+               m.2 <- stats[[2]][[2]]
+               sd.1 <- stats[[1]][[6]]
+               sd.2 <- stats[[2]][[6]]
+               n.1 <- count$n[[1]]
+               n.2 <- count$n[[2]]
+               effect_size <- mes(m.1, m.2, sd.1, sd.2, n.1, n.2, dig=dig, verbose=FALSE)
+               out1 <- c(d=effect_size$d, var.d=effect_size$var.d, p.value=effect_size$pval.d,
+                         U3=effect_size$U3.d, CLES=effect_size$cl.d, Cliff=effect_size$cliffs.d)
+               out2 <- c(r=effect_size$r, var.r=effect_size$var.r, p.value=effect_size$pval.r,
+                         fisher.z=effect_size$fisher.z, var.z=effect_size$var.z)
+               out3 <- c(OR=effect_size$OR, p.value=effect_size$pval.or, logOR=effect_size$lOR)
+               out4 <- round(c(NNT=effect_size$NNT, n.chunk1=n.1, n.chunk2=n.2), digits=1)
+               out <- list('MeanDifference'=out1, 'Correlation'=out2, 'OddsRatio'=out3, 'others'=out4)
+               cat('effect size for contrast', filter, '\n', '\n')
+               print(out)
+               invisible(effect_size)
+               }
