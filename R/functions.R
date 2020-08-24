@@ -63,3 +63,71 @@ check_contrasts <- function(variable){
                             else{print(' ', quote=FALSE)
                                  print('caution: the contrasts are NOT orthogonal', quote=FALSE)}
                             }
+
+#' function to check if a set of contrasts for a variable are orthogonal and consistent
+#'
+#' this function is a wrapper around the functions
+#' \code{'\link[seqinr]{dist.alignment}'}, \code{'\link[ape]{dist.dna}'},
+#' \code{'\link[ape]{nj}'}, \code{'\link[ape]{bionj}'},
+#' \code{'\link[ape]{fastme.bal}'}, \code{'\link[ape]{fastme.ols}'},
+#' \code{'\link[phangorn]{pml}'} and \code{'\link[phangorn]{optim.pml}'}. it takes a sequences alignment in
+#' format 'alignment' of 'DNAbin' matrix and perform all transformations and steps
+#' to calculate a phylogenetic distance matrix based on similarity or identity
+#' in the case of proteins or based in evolutionary models in the case of DNA or
+#' RNA, to perform a likelihood-based phylogenetic clustering and to optimise the phylogeny by a
+#' maximum likelihood algorithm
+#'
+#' @param variable
+#'
+#' @return the function returns an object of class 'pml' of the 'phangorn'
+#'   package. Advanced and elaborated plots can be drawn in later steps based on
+#'   the tree data of the pml class object
+#'
+#' @author gerardo esteban antonicelli
+#'
+#' @seealso \code{'\link{retrieve_seqs}'} \code{'\link{print_alignment}'}
+#'   \code{'\link{clean_alignment}'} \code{'\link{load_alignment}'}
+#'   \code{'\link{make_tree}'} \code{'\link{max_parsimony}'}
+#'
+#' @aliases \alias{check_contrasts}
+#'
+#' @examples
+#' data(fastaRNA)
+#' data(phylipProt)
+#' mytree <- max_likelihood(fastaRNA, type=RNA, clustering=fastme.bal,
+#'                         pml.model=GTR, clean=FALSE)
+#' \dontrun{mytree <- max_likelihood(phylipProt, type=protein, pml.model=Blosum62,
+#'                         outgroup=YP_0010399)}
+#' \dontrun{plot.phylo(mytree, type='u')}
+#'
+#' @importFrom seqinr dist.alignment as.matrix.alignment
+#' @importFrom ape as.alignment as.DNAbin dist.dna nj bionj fastme.bal
+#'   fastme.ols root
+#' @importFrom phangorn as.phyDat pml optim.pml
+#'
+#' @export
+omega_factorial <- function(anova){
+                            a <- anova$Df[[2]]
+                            b <- anova$Df[[3]]
+                            ab <- anova$Df[[4]]
+                            r <- anova$Df[[5]]
+                            n <- sum(anova$Df)/((a+1)*(b+1))
+                            SSa <- anova[[1]][2]
+                            SSb <- anova[[1]][3]
+                            SSab <- anova[[1]][4]
+                            SSr <- anova[[1]][5]
+                            # calculate mean squares by dividing the sums of squares by the degrees of freedom
+                            MSa <- SSa/a
+                            MSb <- SSb/b
+                            MSab <- SSab/ab
+                            MSr <- SSr/r
+                            # calculate the variance estimates
+                            varA <- (a*(MSa-MSr))/(n*(a+1)*(b+1))
+                            varB <- (b*(MSb-MSr))/(n*(a+1)*(b+1))
+                            varAB <- (a*b*(MSab-MSr))/(n*(a+1)*(b+1))
+                            varTotal <- varA+varB+varAB+MSr
+                            # calculate omega^2 by dividing each variance estimate by the total variance estimate
+                            print(paste('omega-squared A : ', varA/varTotal), quote=FALSE)
+                            print(paste('omega-squared B : ', varB/varTotal), quote=FALSE)
+                            print(paste('omega-squared AB: ', varAB/varTotal), quote=FALSE)
+                            }
