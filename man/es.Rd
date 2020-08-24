@@ -30,26 +30,29 @@ from the calculation of effect size, in addition it prints out a summary
 with the most important coefficients
 }
 \description{
-this function is a wrapper around the functions
-\code{'\link[seqinr]{dist.alignment}'}, \code{'\link[ape]{dist.dna}'},
-\code{'\link[ape]{nj}'}, \code{'\link[ape]{bionj}'},
-\code{'\link[ape]{fastme.bal}'}, \code{'\link[ape]{fastme.ols}'},
-\code{'\link[phangorn]{pml}'} and \code{'\link[phangorn]{optim.pml}'}. it
-takes a sequences alignment in format 'alignment' of 'DNAbin' matrix and
-perform all transformations and steps to calculate a phylogenetic distance
-matrix based on similarity or identity in the case of proteins or based in
-evolutionary models in the case of DNA or RNA, to perform a likelihood-based
-phylogenetic clustering and to optimise the phylogeny by a maximum likelihood
-algorithm
+this function is a wrapper and an adapter around the functions
+\code{'\link[pastecs]{stat.desc}'} and \code{'\link[compute.es]{mes}'} it
+takes a data.frame with variables and calculate the effect size of a
+comparison between two chunks of variation, they could be two levels of one
+factor, the combined effect of more than one level of a factor vs another
+level or between two levels of a factor constrained to one level of another
+factor, what is called simple effects analysis, all this possible comparisons
+between two chunks can be analysed with the same function by using orthogonal
+contrasts coded inside the data.frame as columns of dummy variables with the
+weights representing the comparison worth to be analysed closer
 }
 \examples{
 data(gogglesDataES)
 data(depressionDataES)
-mytree <- max_likelihood(fastaRNA, type=RNA, clustering=fastme.bal,
-                        pml.model=GTR, clean=FALSE)
-\dontrun{mytree <- max_likelihood(phylipProt, type=protein, pml.model=Blosum62,
-                        outgroup=YP_0010399)}
-\dontrun{plot.phylo(mytree, type='u')}
+es(gogglesDataES, attractiveness, alcEffect1)
+es(gogglesDataES, attractiveness, alcEffect2)
+es(gogglesDataES, attractiveness, gender_none)
+es(gogglesDataES, attractiveness, gender_twoPints)
+es(gogglesDataES, attractiveness, gender_fourPints)
+es(depressionDataES, diff, all_vs_NoTreatment, dig=4)
+es(depressionDataES, diff, treatment_vs_placebo)
+es(depressionDataES, diff, old_vs_newDrug, dig=2)
+es(depressionDataES, diff, old_vs_oldDrug)
 
 }
 \seealso{
