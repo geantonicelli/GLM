@@ -2,7 +2,7 @@ Package: GLM
 Title: set of wrapper and adapter functions for statistical analysis
 Version: 0.0.1.0
 Depends: R (>= 2.10.0)
-Imports: tidyverse pastecs compute.es
+Imports: dplyr, pastecs, compute.es
 Authors@R: person(given="esteban",
                   family="antonicelli",
                   role=c("aut", "cre"),

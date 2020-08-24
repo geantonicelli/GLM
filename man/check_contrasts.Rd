@@ -38,9 +38,7 @@ mytree <- max_likelihood(fastaRNA, type=RNA, clustering=fastme.bal,
 
 }
 \seealso{
-\code{'\link{retrieve_seqs}'} \code{'\link{print_alignment}'}
-\code{'\link{clean_alignment}'} \code{'\link{load_alignment}'}
-\code{'\link{make_tree}'} \code{'\link{max_parsimony}'}
+\code{'\link{omega_factorial}'} \code{'\link{es}'}
 }
 \author{
 gerardo esteban antonicelli

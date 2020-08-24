@@ -19,9 +19,7 @@
 #'
 #' @author gerardo esteban antonicelli
 #'
-#' @seealso \code{'\link{retrieve_seqs}'} \code{'\link{print_alignment}'}
-#'   \code{'\link{clean_alignment}'} \code{'\link{load_alignment}'}
-#'   \code{'\link{make_tree}'} \code{'\link{max_parsimony}'}
+#' @seealso \code{'\link{omega_factorial}'} \code{'\link{es}'}
 #'
 #' @aliases \alias{check_contrasts}
 #'
@@ -33,11 +31,6 @@
 #' \dontrun{mytree <- max_likelihood(phylipProt, type=protein, pml.model=Blosum62,
 #'                         outgroup=YP_0010399)}
 #' \dontrun{plot.phylo(mytree, type='u')}
-#'
-#' @importFrom seqinr dist.alignment as.matrix.alignment
-#' @importFrom ape as.alignment as.DNAbin dist.dna nj bionj fastme.bal
-#'   fastme.ols root
-#' @importFrom phangorn as.phyDat pml optim.pml
 #'
 #' @export
 check_contrasts <- function(variable){
@@ -85,9 +78,7 @@ check_contrasts <- function(variable){
 #'
 #' @author gerardo esteban antonicelli
 #'
-#' @seealso \code{'\link{retrieve_seqs}'} \code{'\link{print_alignment}'}
-#'   \code{'\link{clean_alignment}'} \code{'\link{load_alignment}'}
-#'   \code{'\link{make_tree}'} \code{'\link{max_parsimony}'}
+#' @seealso \code{'\link{check_contrasts}'} \code{'\link{es}'}
 #'
 #' @aliases \alias{check_contrasts}
 #'
@@ -99,11 +90,6 @@ check_contrasts <- function(variable){
 #' \dontrun{mytree <- max_likelihood(phylipProt, type=protein, pml.model=Blosum62,
 #'                         outgroup=YP_0010399)}
 #' \dontrun{plot.phylo(mytree, type='u')}
-#'
-#' @importFrom seqinr dist.alignment as.matrix.alignment
-#' @importFrom ape as.alignment as.DNAbin dist.dna nj bionj fastme.bal
-#'   fastme.ols root
-#' @importFrom phangorn as.phyDat pml optim.pml
 #'
 #' @export
 omega_factorial <- function(anova){
@@ -156,9 +142,7 @@ omega_factorial <- function(anova){
 #'
 #' @author gerardo esteban antonicelli
 #'
-#' @seealso \code{'\link{retrieve_seqs}'} \code{'\link{print_alignment}'}
-#'   \code{'\link{clean_alignment}'} \code{'\link{load_alignment}'}
-#'   \code{'\link{make_tree}'} \code{'\link{max_parsimony}'}
+#' @seealso \code{'\link{check_contrasts}'} \code{'\link{omega_factorial}'}
 #'
 #' @aliases \alias{es}
 #'
@@ -171,8 +155,8 @@ omega_factorial <- function(anova){
 #'                         outgroup=YP_0010399)}
 #' \dontrun{plot.phylo(mytree, type='u')}
 #'
-#' @importFrom tidyverse filter count
-#' @importFrom pastecs by
+#' @importFrom dplyr filter count
+#' @importFrom pastecs stat.desc
 #' @importFrom compute.es mes
 #'
 #' @export
