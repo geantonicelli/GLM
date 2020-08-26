@@ -2,39 +2,23 @@
 % Please edit documentation in R/functions.R
 \name{omega_factorial}
 \alias{omega_factorial}
-\alias{\alias{check_contrasts}}
-\title{function to check if a set of contrasts for a variable are orthogonal and consistent}
+\alias{\alias{omega_factorial}}
+\title{function to calculate the effect size of a comparison}
 \usage{
 omega_factorial(anova)
 }
 \arguments{
-\item{anova}{}
+\item{anova}{an object of class anova data.frame with the results of an ANOVA type III returned by Anova(model, type='III'), the model is created by aov()}
 }
 \value{
-the function returns an object of class 'pml' of the 'phangorn'
-package. Advanced and elaborated plots can be drawn in later steps based on
-the tree data of the pml class object
+the function prints the omega squared for two factors and one interaction
 }
 \description{
-this function is a wrapper around the functions
-\code{'\link[seqinr]{dist.alignment}'}, \code{'\link[ape]{dist.dna}'},
-\code{'\link[ape]{nj}'}, \code{'\link[ape]{bionj}'},
-\code{'\link[ape]{fastme.bal}'}, \code{'\link[ape]{fastme.ols}'},
-\code{'\link[phangorn]{pml}'} and \code{'\link[phangorn]{optim.pml}'}. it takes a sequences alignment in
-format 'alignment' of 'DNAbin' matrix and perform all transformations and steps
-to calculate a phylogenetic distance matrix based on similarity or identity
-in the case of proteins or based in evolutionary models in the case of DNA or
-RNA, to perform a likelihood-based phylogenetic clustering and to optimise the phylogeny by a
-maximum likelihood algorithm
+function to calculate the effect size of a comparison
 }
 \examples{
-data(fastaRNA)
-data(phylipProt)
-mytree <- max_likelihood(fastaRNA, type=RNA, clustering=fastme.bal,
-                        pml.model=GTR, clean=FALSE)
-\dontrun{mytree <- max_likelihood(phylipProt, type=protein, pml.model=Blosum62,
-                        outgroup=YP_0010399)}
-\dontrun{plot.phylo(mytree, type='u')}
+data(anova)
+omega_factorial(anova)
 
 }
 \seealso{

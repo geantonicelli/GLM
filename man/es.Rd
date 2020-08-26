@@ -3,8 +3,7 @@
 \name{es}
 \alias{es}
 \alias{\alias{es}}
-\title{function to check if a set of contrasts for a variable are orthogonal and
-consistent}
+\title{function to calculate the effect size of a comparison}
 \usage{
 es(data, dep, contrast, dig = 3)
 }

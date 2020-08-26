@@ -57,39 +57,22 @@ check_contrasts <- function(variable){
                                  print('caution: the contrasts are NOT orthogonal', quote=FALSE)}
                             }
 
-#' function to check if a set of contrasts for a variable are orthogonal and consistent
+#' function to calculate the effect size of a comparison
 #'
-#' this function is a wrapper around the functions
-#' \code{'\link[seqinr]{dist.alignment}'}, \code{'\link[ape]{dist.dna}'},
-#' \code{'\link[ape]{nj}'}, \code{'\link[ape]{bionj}'},
-#' \code{'\link[ape]{fastme.bal}'}, \code{'\link[ape]{fastme.ols}'},
-#' \code{'\link[phangorn]{pml}'} and \code{'\link[phangorn]{optim.pml}'}. it takes a sequences alignment in
-#' format 'alignment' of 'DNAbin' matrix and perform all transformations and steps
-#' to calculate a phylogenetic distance matrix based on similarity or identity
-#' in the case of proteins or based in evolutionary models in the case of DNA or
-#' RNA, to perform a likelihood-based phylogenetic clustering and to optimise the phylogeny by a
-#' maximum likelihood algorithm
 #'
-#' @param anova
+#' @param anova an object of class anova data.frame with the results of an ANOVA type III returned by Anova(model, type='III'), the model is created by aov()
 #'
-#' @return the function returns an object of class 'pml' of the 'phangorn'
-#'   package. Advanced and elaborated plots can be drawn in later steps based on
-#'   the tree data of the pml class object
+#' @return the function prints the omega squared for two factors and one interaction
 #'
 #' @author gerardo esteban antonicelli
 #'
 #' @seealso \code{'\link{check_contrasts}'} \code{'\link{es}'}
 #'
-#' @aliases \alias{check_contrasts}
+#' @aliases \alias{omega_factorial}
 #'
 #' @examples
-#' data(fastaRNA)
-#' data(phylipProt)
-#' mytree <- max_likelihood(fastaRNA, type=RNA, clustering=fastme.bal,
-#'                         pml.model=GTR, clean=FALSE)
-#' \dontrun{mytree <- max_likelihood(phylipProt, type=protein, pml.model=Blosum62,
-#'                         outgroup=YP_0010399)}
-#' \dontrun{plot.phylo(mytree, type='u')}
+#' data(anova)
+#' omega_factorial(anova)
 #'
 #' @export
 omega_factorial <- function(anova){
@@ -118,8 +101,7 @@ omega_factorial <- function(anova){
                             print(paste('omega-squared AB: ', varAB/varTotal), quote=FALSE)
                             }
 
-#' function to check if a set of contrasts for a variable are orthogonal and
-#' consistent
+#' function to calculate the effect size of a comparison
 #'
 #' this function is a wrapper and an adapter around the functions
 #'   \code{'\link[pastecs]{stat.desc}'} and \code{'\link[compute.es]{mes}'} it
