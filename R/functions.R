@@ -179,3 +179,164 @@ es <- function(data, dep, contrast, dig=3){
                print(out)
                invisible(effect_size)
                }
+
+#' function to calculate the effect size of a comparison
+#'
+#' this function is a wrapper and an adapter around the functions
+#'   \code{'\link[pastecs]{stat.desc}'} and \code{'\link[compute.es]{mes}'} it
+#'   takes a data.frame with variables and calculate the effect size of a
+#'   comparison between two chunks of variation, they could be two levels of one
+#'   factor, the combined effect of more than one level of a factor vs another
+#'   level or between two levels of a factor constrained to one level of another
+#'   factor, what is called simple effects analysis, all this possible comparisons
+#'   between two chunks can be analysed with the same function by using orthogonal
+#'   contrasts coded inside the data.frame as columns of dummy variables with the
+#'   weights representing the comparison worth to be analysed closer
+#'
+#' @param data a character string without '' specifying a data.frame object with
+#'   the data, each variable must be in only one column, one dummy variable with
+#'   weights (in one column) for each contrast to be analysed must be provided
+#' @param dep a character string without '' specifying the name of the dependent
+#'   variable, this must be at the same time a column name in the data object
+#' @param contrast a character string without '' specifying the name of the
+#'   contrast to be analysed, this must be at the same time the name of a column
+#'   for a dummy variable with weights specifying which samples should be
+#'   compared
+#' @param dig numeric an integer specifying the number of decimal digits to be
+#'   printed out and also invisibly returned by the mes() function
+#'
+#' @return the function returns invisibly a data.frame with all coefficients
+#'   from the calculation of effect size, in addition it prints out a summary
+#'   with the most important coefficients
+#'
+#' @author gerardo esteban antonicelli
+#'
+#' @seealso \code{'\link{check_contrasts}'} \code{'\link{omega_factorial}'}
+#'
+#' @aliases \alias{es}
+#'
+#' @examples
+#' data(gogglesDataES)
+#' data(depressionDataES)
+#' es(gogglesDataES, attractiveness, alcEffect1)
+#' es(gogglesDataES, attractiveness, alcEffect2)
+#' es(gogglesDataES, attractiveness, gender_none)
+#' es(gogglesDataES, attractiveness, gender_twoPints)
+#' es(gogglesDataES, attractiveness, gender_fourPints)
+#' es(depressionDataES, diff, all_vs_NoTreatment, dig=4)
+#' es(depressionDataES, diff, treatment_vs_placebo)
+#' es(depressionDataES, diff, old_vs_newDrug, dig=2)
+#' es(depressionDataES, diff, old_vs_oldDrug)
+#'
+#' @importFrom boot boot boot.ci
+#'
+#' @export
+corr.test <- function(data, method='pearson', alternative='two.sided',
+                      conf.level=0.95, use='pairwise.complete.obs',
+                      boots=1000, verbose=TRUE){
+                      if(is.null(dim(data)) || dim(data)[[2]]==2){
+                         corr <- cor.test(data[[1]], data[[2]],
+                                          alternative=alternative,
+                                          method=method, conf.level=conf.level)
+                         if(method!='pearson'){
+                            bootR <- function(data, i) cor(data[[1]][i], data[[2]][i],
+                                                           use=use, method=method)
+                            boot.out <- boot(data, bootR, R=boots)
+                            ci <- boot.ci(boot.out, conf=conf.level, type='bca')
+                            ci.out <- c(lower.ci=ci$bca[4], upper.ci=ci$bca[5],
+                                        conf.level=conf.level)
+                            out <- list(main=corr, confidence.interval=ci.out)
+                            if(verbose==TRUE){
+                               print(corr)
+                               cat(conf.level*100, 'percent confidence interval', '\n',
+                                   ci$bca[4], '    ', ci$bca[5])
+                               }
+                            invisible(out)
+                            }
+                         else{return(corr)}
+                         }
+                      else{if(use=='complete.obs'){data <- na.omit(data)
+                           }
+                           col <- dim(data)[[2]]
+                           s.est <- vector('list', col)
+                           p.val <- vector('list', col)
+                           lower.ci <- vector('list', col)
+                           upper.ci <- vector('list', col)
+                           for(i in 1:col){
+                               estimate <- c()
+                               p.value <- c()
+                               lower <- c()
+                               upper <- c()
+                               for(j in 1:col){
+                                   corr <- cor.test(data[[i]], data[[j]],
+                                                    alternative=alternative,
+                                                    method=method,
+                                                    conf.level=conf.level)
+                                   estimate[j] <- corr$estimate
+                                   p.value[j] <- corr$p.value
+                                   if(method=='pearson'){
+                                      lower[j] <- corr$conf.int[1]
+                                      upper[j] <- corr$conf.int[2]
+                                      }
+                                   else{if(i!=j){
+                                           bootR <- function(data, k) cor(data[[i]][k],
+                                                                          data[[j]][k],
+                                                                          use=use,
+                                                                          method=method)
+                                           boot.out <- boot(data, bootR, R=boots)
+                                           ci <- boot.ci(boot.out,
+                                                         conf=conf.level,
+                                                         type='bca')
+                                           lower[j] <- ci$bca[4]
+                                           upper[j] <- ci$bca[5]
+                                           }
+                                        else{lower[j] <- 1
+                                             upper[j] <- 1
+                                             }
+                                        }
+                                   }
+                               s.est[[i]] <- estimate
+                               p.val[[i]] <- p.value
+                               lower.ci[[i]] <- lower
+                               upper.ci[[i]] <- upper
+                               }
+                           names(s.est) <- colnames(data)
+                           names(p.val) <- colnames(data)
+                           names(lower.ci) <- colnames(data)
+                           names(upper.ci) <- colnames(data)
+                           s.est <- as.data.frame(s.est)
+                           p.val <- as.data.frame(p.val)
+                           lower.ci <- as.data.frame(lower.ci)
+                           upper.ci <- as.data.frame(upper.ci)
+                           rownames(s.est) <- colnames(data)
+                           rownames(p.val) <- colnames(data)
+                           rownames(lower.ci) <- colnames(data)
+                           rownames(upper.ci) <- colnames(data)
+                           s.est <- as.matrix(s.est)
+                           p.val <- as.matrix(p.val)
+                           lower.ci <- as.matrix(lower.ci)
+                           upper.ci <- as.matrix(upper.ci)
+                           if(verbose==TRUE){
+                              cat('\n', corr$method, '\n', '\n', 'sample estimates', '\n')
+                              print(s.est)
+                              cat('\n', 'p-values', '\n')
+                              print(p.val)
+                              cat('\n', 'lower limit of', conf.level*100,
+                                  '% confidence interval', '\n')
+                              print(lower.ci)
+                              cat('\n', 'upper limit of', conf.level*100,
+                                  '% confidence interval', '\n')
+                              print(upper.ci)
+                              if(alternative=='two.sided'){
+                                 cat('\n',
+                                     'alternative hypothesis: true correlation is not equal to 0')}
+                              else{cat('\n', 'alternative hypothesis is: true correlation is',
+                                       corr$alternative, 'than 0')}
+                              }
+                           out <- list(method=corr$method, alternative=corr$alternative,
+                                       use=use, conf.level=conf.level,
+                                       estimates=s.est, p.values=p.val,
+                                       lowerCI=lower.ci, upperCI=upper.ci)
+                           invisible(out)
+                           }
+                      }
