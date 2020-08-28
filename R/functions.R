@@ -235,21 +235,19 @@ corr.test <- function(data, method='pearson', alternative='two.sided',
                       conf.level=0.95, use='pairwise.complete.obs',
                       boots=1000, verbose=TRUE){
                       if(is.null(dim(data)) || dim(data)[[2]]==2){
+                         data <- data.frame(data[[1]], data[[2]])
                          corr <- cor.test(data[[1]], data[[2]],
                                           alternative=alternative,
-                                          method=method, conf.level=conf.level)
+                                          method=method,
+                                          conf.level=conf.level)
                          if(method!='pearson'){
-                            bootR <- function(data, i) cor(data[[1]][i], data[[2]][i],
-                                                           use=use, method=method)
+                            bootR <- function(data, i) cor(data[[1]][i], data[[2]][i], use=use, method=method)
                             boot.out <- boot(data, bootR, R=boots)
                             ci <- boot.ci(boot.out, conf=conf.level, type='bca')
-                            ci.out <- c(lower.ci=ci$bca[4], upper.ci=ci$bca[5],
-                                        conf.level=conf.level)
-                            out <- list(main=corr, confidence.interval=ci.out)
+                            out <- list(correlation=corr, confidence.interval=ci)
                             if(verbose==TRUE){
                                print(corr)
-                               cat(conf.level*100, 'percent confidence interval', '\n',
-                                   ci$bca[4], '    ', ci$bca[5])
+                               print(ci)
                                }
                             invisible(out)
                             }
