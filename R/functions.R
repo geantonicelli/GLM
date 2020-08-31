@@ -338,3 +338,84 @@ corr.test <- function(data, method='pearson', alternative='two.sided',
                            invisible(out)
                            }
                       }
+
+#' function to calculate the effect size of a comparison
+#'
+#' this function is a wrapper and an adapter around the functions
+#'   \code{'\link[pastecs]{stat.desc}'} and \code{'\link[compute.es]{mes}'} it
+#'   takes a data.frame with variables and calculate the effect size of a
+#'   comparison between two chunks of variation, they could be two levels of one
+#'   factor, the combined effect of more than one level of a factor vs another
+#'   level or between two levels of a factor constrained to one level of another
+#'   factor, what is called simple effects analysis, all this possible comparisons
+#'   between two chunks can be analysed with the same function by using orthogonal
+#'   contrasts coded inside the data.frame as columns of dummy variables with the
+#'   weights representing the comparison worth to be analysed closer
+#'
+#' @param data a character string without '' specifying a data.frame object with
+#'   the data, each variable must be in only one column, one dummy variable with
+#'   weights (in one column) for each contrast to be analysed must be provided
+#' @param dep a character string without '' specifying the name of the dependent
+#'   variable, this must be at the same time a column name in the data object
+#' @param contrast a character string without '' specifying the name of the
+#'   contrast to be analysed, this must be at the same time the name of a column
+#'   for a dummy variable with weights specifying which samples should be
+#'   compared
+#' @param dig numeric an integer specifying the number of decimal digits to be
+#'   printed out and also invisibly returned by the mes() function
+#'
+#' @return the function returns invisibly a data.frame with all coefficients
+#'   from the calculation of effect size, in addition it prints out a summary
+#'   with the most important coefficients
+#'
+#' @author gerardo esteban antonicelli
+#'
+#' @seealso \code{'\link{check_contrasts}'} \code{'\link{omega_factorial}'}
+#'
+#' @aliases \alias{es}
+#'
+#' @examples
+#' data(gogglesDataES)
+#' data(depressionDataES)
+#' es(gogglesDataES, attractiveness, alcEffect1)
+#' es(gogglesDataES, attractiveness, alcEffect2)
+#' es(gogglesDataES, attractiveness, gender_none)
+#' es(gogglesDataES, attractiveness, gender_twoPints)
+#' es(gogglesDataES, attractiveness, gender_fourPints)
+#' es(depressionDataES, diff, all_vs_NoTreatment, dig=4)
+#' es(depressionDataES, diff, treatment_vs_placebo)
+#' es(depressionDataES, diff, old_vs_newDrug, dig=2)
+#' es(depressionDataES, diff, old_vs_oldDrug)
+#'
+#' @importFrom boot boot boot.ci
+#'
+#' @export
+omega <- function(anova){
+  ee <<- environment() # trick to see what's inside of the function's execution environment
+  print(environment())
+  # print(ls.str()) # alternatively
+  # ------------------------------------------------------------------------------------------
+  model <- summary(anova)
+  SSm <- model[[1]][[2]]
+  MSr <- model[[1]][[3]][[length(SSm)]]
+  SSt <- sum(SSm)
+  df <- model[[1]][[1]]
+  omega.square <- c()
+  f.square <- c()
+  for(i in 1:length(SSm)-1){
+    i.SSm <- SSm[i]
+    i.df <- df[i]
+    num <- i.SSm-(i.df*MSr)
+    den <- SSt+MSr
+    omega <- num/den
+    omega.square[i] <- omega
+    f <- omega/(1-omega)
+    f.square[i] <- f
+  }
+  names <- rownames(model[[1]])
+  names <- names[1:length(SSm)-1]
+  names(omega.square) <- names
+  out <- as.matrix(as.data.frame(omega.square))
+  out <- cbind(out, f.square)
+  return(out)
+}

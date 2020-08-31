@@ -3,6 +3,7 @@
 export(check_contrasts)
 export(corr.test)
 export(es)
+export(omega)
 export(omega_factorial)
 importFrom(boot,boot)
 importFrom(boot,boot.ci)
