@@ -60,9 +60,12 @@ check_contrasts <- function(variable){
 #' function to calculate the effect size of a comparison
 #'
 #'
-#' @param anova an object of class anova data.frame with the results of an ANOVA type III returned by Anova(model, type='III'), the model is created by aov()
+#' @param anova an object of class anova data.frame with the results of an ANOVA
+#'   type III returned by Anova(model, type='III'), the model is created by
+#'   aov()
 #'
-#' @return the function prints the omega squared for two factors and one interaction
+#' @return the function prints the omega squared for two factors and one
+#'   interaction
 #'
 #' @author gerardo esteban antonicelli
 #'
@@ -434,53 +437,38 @@ omega <- function(anova){
                   out
                   }
 
-#' function to calculate the effect size of a comparison
+#' function to retrieve the contrasts stored in a dataset and fit an ANOVA on
+#' those
 #'
-#' this function is a wrapper and an adapter around the functions
-#'   \code{'\link[pastecs]{stat.desc}'} and \code{'\link[compute.es]{mes}'} it
-#'   takes a data.frame with variables and calculate the effect size of a
-#'   comparison between two chunks of variation, they could be two levels of one
-#'   factor, the combined effect of more than one level of a factor vs another
-#'   level or between two levels of a factor constrained to one level of another
-#'   factor, what is called simple effects analysis, all this possible comparisons
-#'   between two chunks can be analysed with the same function by using orthogonal
-#'   contrasts coded inside the data.frame as columns of dummy variables with the
-#'   weights representing the comparison worth to be analysed closer
+#' this function is a wrapper and an adapter around \code{'\link[stats]{aov}'},
+#'   it retrieves the contrasts for each independent variable specified in an
+#'   aov() model and stored in the original dataset, and fits an ANOVA model on
+#'   all contrasts for each independent variable, in order to obtained the
+#'   computed SS and MS for further calculations, otherwise not available from the
+#'   original ANOVA model as displayed by summary() or summary.lm(), the model
+#'   fitted for all contrasts of one variable is the same as displayed by
+#'   summary.lm() on the original ANOVA model
 #'
-#' @param data a character string without '' specifying a data.frame object with
-#'   the data, each variable must be in only one column, one dummy variable with
-#'   weights (in one column) for each contrast to be analysed must be provided
-#' @param dep a character string without '' specifying the name of the dependent
-#'   variable, this must be at the same time a column name in the data object
-#' @param contrast a character string without '' specifying the name of the
-#'   contrast to be analysed, this must be at the same time the name of a column
-#'   for a dummy variable with weights specifying which samples should be
-#'   compared
-#' @param dig numeric an integer specifying the number of decimal digits to be
-#'   printed out and also invisibly returned by the mes() function
+#' @param anova an object of class anova data.frame with the ANOVA model created
+#'   by aov(), in the original dataset, each variable must be in only one
+#'   column, and all contrasts for each variable should be loaded as contrasts
+#'   for that variable
 #'
-#' @return the function returns invisibly a data.frame with all coefficients
-#'   from the calculation of effect size, in addition it prints out a summary
-#'   with the most important coefficients
+#' @return the function returns the fitted ANOVA models for all the contrasts stored for each variable
 #'
 #' @author gerardo esteban antonicelli
 #'
 #' @seealso \code{'\link{check_contrasts}'} \code{'\link{omega_factorial}'}
 #'
-#' @aliases \alias{es}
+#' @aliases \alias{fit_aov}
 #'
 #' @examples
-#' data(gogglesDataES)
+#' data(gogglesData)
 #' data(depressionDataES)
-#' es(gogglesDataES, attractiveness, alcEffect1)
-#' es(gogglesDataES, attractiveness, alcEffect2)
-#' es(gogglesDataES, attractiveness, gender_none)
-#' es(gogglesDataES, attractiveness, gender_twoPints)
-#' es(gogglesDataES, attractiveness, gender_fourPints)
-#' es(depressionDataES, diff, all_vs_NoTreatment, dig=4)
-#' es(depressionDataES, diff, treatment_vs_placebo)
-#' es(depressionDataES, diff, old_vs_newDrug, dig=2)
-#' es(depressionDataES, diff, old_vs_oldDrug)
+#' gogglesModel <- aov(attractiveness ~ gender + alcohol + gender:alcohol, data=gogglesData)
+#' simple.model <- aov(attractiveness ~ simple, data=gogglesData)
+#' fit_aov(gogglesModel)
+#' fit_aov(simple.model)
 #'
 #' @importFrom dplyr arrange
 #' @importFrom stats aov

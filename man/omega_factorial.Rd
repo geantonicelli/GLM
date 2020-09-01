@@ -8,10 +8,13 @@
 omega_factorial(anova)
 }
 \arguments{
-\item{anova}{an object of class anova data.frame with the results of an ANOVA type III returned by Anova(model, type='III'), the model is created by aov()}
+\item{anova}{an object of class anova data.frame with the results of an ANOVA
+type III returned by Anova(model, type='III'), the model is created by
+aov()}
 }
 \value{
-the function prints the omega squared for two factors and one interaction
+the function prints the omega squared for two factors and one
+interaction
 }
 \description{
 function to calculate the effect size of a comparison
