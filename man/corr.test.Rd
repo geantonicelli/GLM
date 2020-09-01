@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{corr.test}
 \alias{corr.test}
-\alias{\alias{es}}
+\alias{\alias{corr.test}}
 \title{function to calculate the effect size of a comparison}
 \usage{
 corr.test(
@@ -20,16 +20,18 @@ corr.test(
 the data, each variable must be in only one column, one dummy variable with
 weights (in one column) for each contrast to be analysed must be provided}
 
-\item{dep}{a character string without '' specifying the name of the dependent
+\item{method}{a character string without '' specifying the name of the dependent
 variable, this must be at the same time a column name in the data object}
 
-\item{contrast}{a character string without '' specifying the name of the
+\item{alternative}{a character string without '' specifying the name of the
 contrast to be analysed, this must be at the same time the name of a column
 for a dummy variable with weights specifying which samples should be
 compared}
 
-\item{dig}{numeric an integer specifying the number of decimal digits to be
+\item{conf.level}{numeric an integer specifying the number of decimal digits to be
 printed out and also invisibly returned by the mes() function}
+
+\item{verbose}{}
 }
 \value{
 the function returns invisibly a data.frame with all coefficients

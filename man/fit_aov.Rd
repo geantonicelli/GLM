@@ -10,7 +10,7 @@ fit_aov(anova)
 }
 \arguments{
 \item{anova}{an object of class anova data.frame with the ANOVA model created
-by aov(), in the original dataset, each variable must be in only one
+by aov(), in the original dataset each variable must be in only one
 column, and all contrasts for each variable should be loaded as contrasts
 for that variable}
 }
@@ -29,11 +29,13 @@ summary.lm() on the original ANOVA model
 }
 \examples{
 data(gogglesData)
-data(depressionDataES)
-gogglesModel <- aov(attractiveness ~ gender + alcohol + gender:alcohol, data=gogglesData)
+data(depressionData)
+goggles.model <- aov(attractiveness ~ gender + alcohol + gender:alcohol, data=gogglesData)
 simple.model <- aov(attractiveness ~ simple, data=gogglesData)
-fit_aov(gogglesModel)
+depression.model <- aov(diff ~ treat, data=depressionData)
+fit_aov(goggles.model)
 fit_aov(simple.model)
+fit_aov(depression.model)
 
 }
 \seealso{

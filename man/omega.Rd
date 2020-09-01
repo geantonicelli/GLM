@@ -2,56 +2,44 @@
 % Please edit documentation in R/functions.R
 \name{omega}
 \alias{omega}
-\alias{\alias{es}}
-\title{function to calculate the effect size of a comparison}
+\alias{\alias{omega}}
+\title{function to calculate the omega squared and f squared effect size of independent
+variables in an ANOVA model}
 \usage{
 omega(anova)
 }
 \arguments{
-\item{data}{a character string without '' specifying a data.frame object with
-the data, each variable must be in only one column, one dummy variable with
-weights (in one column) for each contrast to be analysed must be provided}
-
-\item{dep}{a character string without '' specifying the name of the dependent
-variable, this must be at the same time a column name in the data object}
-
-\item{contrast}{a character string without '' specifying the name of the
-contrast to be analysed, this must be at the same time the name of a column
-for a dummy variable with weights specifying which samples should be
-compared}
-
-\item{dig}{numeric an integer specifying the number of decimal digits to be
-printed out and also invisibly returned by the mes() function}
+\item{anova}{an object of class anova data.frame with the ANOVA model created
+by aov(), in the original dataset each variable must be in only one
+column, and all contrasts for each variable should be loaded as contrasts
+for that variable}
 }
 \value{
-the function returns invisibly a data.frame with all coefficients
-from the calculation of effect size, in addition it prints out a summary
-with the most important coefficients
+the function returns the omega squared and f squared effect sizes for
+each independent variable specified in the main ANOVA model and for each
+contrast in the ANOVA model fitted for each independent variable
 }
 \description{
-this function is a wrapper and an adapter around the functions
-\code{'\link[pastecs]{stat.desc}'} and \code{'\link[compute.es]{mes}'} it
-takes a data.frame with variables and calculate the effect size of a
-comparison between two chunks of variation, they could be two levels of one
-factor, the combined effect of more than one level of a factor vs another
-level or between two levels of a factor constrained to one level of another
-factor, what is called simple effects analysis, all this possible comparisons
-between two chunks can be analysed with the same function by using orthogonal
-contrasts coded inside the data.frame as columns of dummy variables with the
-weights representing the comparison worth to be analysed closer
+this function uses the function fit_aov() to retrieve the contrasts for each
+independent variable specified in an aov() model and stored in the original
+dataset, and to fit an ANOVA model on all contrasts for each independent
+variable, in order to obtained the computed SS and MS for further calculations,
+otherwise not available from the original ANOVA model as displayed by summary()
+or summary.lm(), the model fitted for all contrasts of one variable is the same
+as displayed by summary.lm() on the original ANOVA model
+this function calculates the omega squared and f squared coefficients from the SS,
+MS and df calculated by aov() for each independent variable and for each contrast
+specified for each independent variable
 }
 \examples{
-data(gogglesDataES)
-data(depressionDataES)
-es(gogglesDataES, attractiveness, alcEffect1)
-es(gogglesDataES, attractiveness, alcEffect2)
-es(gogglesDataES, attractiveness, gender_none)
-es(gogglesDataES, attractiveness, gender_twoPints)
-es(gogglesDataES, attractiveness, gender_fourPints)
-es(depressionDataES, diff, all_vs_NoTreatment, dig=4)
-es(depressionDataES, diff, treatment_vs_placebo)
-es(depressionDataES, diff, old_vs_newDrug, dig=2)
-es(depressionDataES, diff, old_vs_oldDrug)
+data(gogglesData)
+data(depressionData)
+goggles.model <- aov(attractiveness ~ gender + alcohol + gender:alcohol, data=gogglesData)
+simple.model <- aov(attractiveness ~ simple, data=gogglesData)
+depression.model <- aov(diff ~ treat, data=depressionData)
+omega(goggles.model)
+omega(simple.model)
+omega(depression.model)
 
 }
 \seealso{
