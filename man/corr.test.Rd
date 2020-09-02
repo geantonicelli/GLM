@@ -3,7 +3,8 @@
 \name{corr.test}
 \alias{corr.test}
 \alias{\alias{corr.test}}
-\title{function to calculate the effect size of a comparison}
+\title{function to calculate correlation coefficients, confidence intervals and
+p-values for one or more pairs of variables}
 \usage{
 corr.test(
   data,
@@ -11,57 +12,99 @@ corr.test(
   alternative = "two.sided",
   conf.level = 0.95,
   use = "pairwise.complete.obs",
-  boots = 1000,
-  verbose = TRUE
+  boots = 2000,
+  verbose = TRUE,
+  exact = NULL,
+  continuity = FALSE
 )
 }
 \arguments{
 \item{data}{a character string without '' specifying a data.frame object with
-the data, each variable must be in only one column, one dummy variable with
-weights (in one column) for each contrast to be analysed must be provided}
+the data, each variable must be in only one column, or a subset of a
+data.frame with two or more variables or two vectors in a list}
 
-\item{method}{a character string without '' specifying the name of the dependent
-variable, this must be at the same time a column name in the data object}
+\item{method}{a character string specifying the correlation method to be
+used, options are pearson, spearman or kendall, names can be abbreviated}
 
-\item{alternative}{a character string without '' specifying the name of the
-contrast to be analysed, this must be at the same time the name of a column
-for a dummy variable with weights specifying which samples should be
-compared}
+\item{alternative}{a character string indicating the alternative hypothesis
+and must be one of 'two.sided', 'greater' or 'less', 'greater' corresponds
+to a positive association, 'less' to a negative association, names can be
+abbreviated}
 
-\item{conf.level}{numeric an integer specifying the number of decimal digits to be
-printed out and also invisibly returned by the mes() function}
+\item{conf.level}{numeric an decimal specifying the confidence level for the
+returned confidence interval}
 
-\item{verbose}{}
+\item{use}{an character string giving a method for computing covariances in
+the presence of missing values, options are (an abbreviation of) one of the
+strings 'complete.obs' or 'pairwise.complete.obs' (default)}
+
+\item{boots}{a single positive integer indicating the number of bootstrap
+replicates, default=2000}
+
+\item{verbose}{a logical indicating whether a summary of the output should be
+printed to the console}
+
+\item{exact}{a logical indicating whether an exact p-value should be computed
+(used for Kendall's tau and Spearman's rho), see 'details' for the meaning
+of NULL (the default)}
+
+\item{continuity}{logical: if true, a continuity correction is used for
+Kendall's tau and Spearman's rho when not computed exactly}
 }
 \value{
-the function returns invisibly a data.frame with all coefficients
-from the calculation of effect size, in addition it prints out a summary
-with the most important coefficients
+if the input are two vectors or two columns of a data.frame and the
+method is pearson the function returns invisibly and print to the console
+the output of cor.test(), if the method is kendall or spearman the function
+returns invisibly a list and prints to the console (if verbose=TRUE) the
+output of cor.test() and the confidence interval from boot.ci(), if the
+input is a data.frame with more than two variables the function returns
+invisibly a list with the call, relevant input parameters and the matrices
+with correlation coefficients, p-values and lower and upper limits of
+confidence intervals for all combinations of variables, if verbose=TRUE the
+function prints to the console the matrices with correlation coefficients,
+p-values and lower and upper limits of confidence intervals for all
+combinations of variables
 }
 \description{
-this function is a wrapper and an adapter around the functions
-\code{'\link[pastecs]{stat.desc}'} and \code{'\link[compute.es]{mes}'} it
-takes a data.frame with variables and calculate the effect size of a
-comparison between two chunks of variation, they could be two levels of one
-factor, the combined effect of more than one level of a factor vs another
-level or between two levels of a factor constrained to one level of another
-factor, what is called simple effects analysis, all this possible comparisons
-between two chunks can be analysed with the same function by using orthogonal
-contrasts coded inside the data.frame as columns of dummy variables with the
-weights representing the comparison worth to be analysed closer
+this function is an extension of cor.test() that calculates correlation
+coefficients, p-values and confidence intervals for a pair of variables or
+for all pairs of variables if more than two are provided in a data.frame. It
+can calculate Pearson, Kendall or Spearman correlation coefficients and
+p-values for a two-tailed or one-tailed alternative hypothesis. For Kendall
+or Spearman correlation, confidence intervals are calculated by bootstrap
+samling. In case of NAs the complete row can be taken out or only for the
+affected comparisons
+}
+\details{
+the three methods each estimate the association between paired
+samples and compute a test of the value being zero. They use different
+measures of association, all in the range \link{-1, 1} with 0 indicating no
+association, these are sometimes referred to as tests of no correlation,
+but that term is often confined to the default method. If method is
+'pearson', the test statistic is based on Pearson's product moment
+correlation coefficient cor(x, y) and follows a t distribution with
+length(x)-2 degrees of freedom if the samples follow independent normal
+distributions. If there are at least 4 complete pairs of observation, an
+asymptotic confidence interval is given based on Fisher's Z transform. If
+method is 'kendall' or 'spearman', Kendall's tau or Spearman's rho
+statistic is used to estimate a rank-based measure of association, these
+tests may be used if the data do not necessarily come from a bivariate
+normal distribution. For Kendall's test, by default (if exact is NULL), an
+exact p-value is computed if there are less than 50 paired samples
+containing finite values and there are no ties, otherwise, the test
+statistic is the estimate scaled to zero mean and unit variance, and is
+approximately normally distributed. For Spearman's test, p-values are
+computed using algorithm AS 89 for n<1290 and exact=TRUE, otherwise via the
+asymptotic t approximation. Note that these are ‘exact’ for n<10, and use
+an Edgeworth series approximation for larger sample sizes (the cutoff has
+been changed from the original paper)
 }
 \examples{
-data(gogglesDataES)
+data(examData)
 data(depressionDataES)
-es(gogglesDataES, attractiveness, alcEffect1)
-es(gogglesDataES, attractiveness, alcEffect2)
-es(gogglesDataES, attractiveness, gender_none)
-es(gogglesDataES, attractiveness, gender_twoPints)
-es(gogglesDataES, attractiveness, gender_fourPints)
-es(depressionDataES, diff, all_vs_NoTreatment, dig=4)
-es(depressionDataES, diff, treatment_vs_placebo)
-es(depressionDataES, diff, old_vs_newDrug, dig=2)
-es(depressionDataES, diff, old_vs_oldDrug)
+corr.test(examData[ , c(2, 4)], 'pearson', 'greater', 0.99)
+corr.test(list(examData$Revise, examData$Anxiety), 'kendall', 'two.sided', 0.99, boots=1000)
+corr.test(examData[ , 2:4], 'spearman', 'less', 0.95, 'complete.obs', exact=FALSE, verbose=FALSE)
 
 }
 \seealso{
