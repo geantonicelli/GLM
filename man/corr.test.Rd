@@ -101,10 +101,13 @@ been changed from the original paper)
 }
 \examples{
 data(examData)
-data(depressionDataES)
+data(personalityData)
+data(stalkerData)
 corr.test(examData[ , c(2, 4)], 'pearson', 'greater', 0.99)
 corr.test(list(examData$Revise, examData$Anxiety), 'kendall', 'two.sided', 0.99, boots=1000)
 corr.test(examData[ , 2:4], 'spearman', 'less', 0.95, 'complete.obs', exact=FALSE, verbose=FALSE)
+corr.test(personalityData[ , c(3, 12)], conf.level=0.99)
+corr.test(stalkerData[ , c(2, 3)], 'spearman', conf.level=0.99, exact=FALSE, continuity=TRUE)
 
 }
 \seealso{
