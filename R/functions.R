@@ -266,9 +266,11 @@ es <- function(data, dep, contrast, dig=3){
 #' data(personalityData)
 #' data(stalkerData)
 #' corr.test(examData[ , c(2, 4)], 'pearson', 'greater', 0.99)
-#' corr.test(list(examData$Revise, examData$Anxiety), 'kendall', 'two.sided', 0.99, boots=1000)
-#' corr.test(examData[ , 2:4], 'spearman', 'less', 0.95, 'complete.obs', exact=FALSE, verbose=FALSE)
-#' corr.test(personalityData[ , c(3, 12)], conf.level=0.99)
+#' corr.test(list(examData$Revise, examData$Anxiety), 'kendall', 'less', 0.99, boots=1000)
+#' corr.test(examData[ , 2:4], 'spearman', 'greater', 0.95, 'complete.obs', exact=FALSE, verbose=FALSE)
+#' corr.test(personalityData[ , c(3:12)], 'pearson', 'less', 0.99, 'complete.obs')
+#' corr.test(personalityData[ , c(3:12)], conf.level=0.99)
+#' corr.test(personalityData[ , c(3:12)], 'kendall', boots=500)
 #' corr.test(stalkerData[ , c(2, 3)], 'spearman', conf.level=0.99, exact=FALSE, continuity=TRUE)
 #'
 #' @importFrom boot boot boot.ci
@@ -279,7 +281,6 @@ corr.test <- function(data, method='pearson', alternative='two.sided',
                       boots=2000, verbose=TRUE, exact=NULL, continuity=FALSE){
                       method <- match.arg(method, choices=c('pearson', 'spearman', 'kendall'))
                       alternative <- match.arg(alternative, choices=c('two.sided', 'greater', 'less'))
-                      use <- match.arg(use, choices=c('complete.obs', 'pairwise.complete.obs'))
                       Call <- match.call()
                       if(is.null(dim(data)) || dim(data)[[2]]==2){
                          data <- data.frame(data[[1]], data[[2]])
@@ -293,7 +294,7 @@ corr.test <- function(data, method='pearson', alternative='two.sided',
                             bootR <- function(data, i) cor(data[[1]][i], data[[2]][i],
                                                            use=use, method=method)
                             boot.out <- boot(data, bootR, R=boots)
-                            ci <- boot.ci(boot.out, conf=conf.level, type='bca')
+                            ci <- boot.ci(boot.out, conf=conf.level, type='perc')
                             out <- list(correlation=corr, confidence.interval=ci)
                             if(verbose==TRUE){
                                print(corr)
@@ -336,9 +337,9 @@ corr.test <- function(data, method='pearson', alternative='two.sided',
                                            boot.out <- boot(data, bootR, R=boots)
                                            ci <- boot.ci(boot.out,
                                                          conf=conf.level,
-                                                         type='bca')
-                                           lower[j] <- ci$bca[4]
-                                           upper[j] <- ci$bca[5]
+                                                         type='perc')
+                                           lower[j] <- ci$percent[4]
+                                           upper[j] <- ci$percent[5]
                                            }
                                         else{lower[j] <- 1
                                              upper[j] <- 1
