@@ -520,37 +520,67 @@ fit_aov <- function(anova){
                     model <- anova[length(anova)]
                     nvar <- dim(model$model)[2]
                     Ntotal <- dim(model$model)[1]
-                    fits <- vector('list', nvar)
-                    names(fits) <- colnames(model$model)
+                    dat.list <- vector('list', nvar)
+                    ind.list <- vector('list', nvar)
+                    names(dat.list) <- colnames(model$model)
+                    names(ind.list) <- colnames(model$model)
                     for(i in 1:nvar){
-                        var <- attr(model$model[[i]], 'contrasts')
-                        if(is.null(var)) next
-                        ncol <- dim(var)[2]
+                        c.var <- attr(model$model[[i]], 'contrasts')
+                        if(is.null(c.var)) next
+                        ncol <- dim(c.var)[2]
                         contrasts <- vector('list', ncol)
-                        names(contrasts) <- colnames(var)
+                        names(contrasts) <- colnames(c.var)
                         n <- Ntotal/length(levels(model$model[[i]]))
                         for(j in 1:ncol){
-                            contrast <- var[ , j]
+                            contrast <- c.var[ , j]
                             weights <- rep(contrast, each=n)
                             contrasts[[j]] <- weights
                             }
                         contrasts <- as.data.frame(contrasts)
-                        dataset <- arrange(model$model, model$model[[i]])
-                        dep <- dataset[y]
-                        data <- cbind(dep, contrasts)
-                        indep <- colnames(contrasts)
-                        ind.for <- indep[1]
-                        if(length(indep)>=2){
-                           for(k in 2:length(indep)){
-                               ind.for <- paste0(ind.for, ' + ', indep[k])
-                               }
-                           }
-                        aovcall[[1L]] <- quote(stats::aov)
-                        aovcall$formula <- as.formula(paste0(y, ' ~ ', ind.for))
-                        aovcall$data <- quote(data)
-                        fit <- eval(substitute(aovcall))
-                        fits[[i]] <- fit
-                        out <- fits[-1]
+                        ind.i <- colnames(contrasts)
+                        ind.list[[i]] <- ind.i
+                        dat.o <- model$model
+                        dat.r <- mutate(dat.o, key=row_number())
+                        dat.a <- arrange(dat.r, dat.r[i])
+                        dat.i <- cbind(dat.a[c('key', y)], contrasts)
+                        dat.list[[i]] <- dat.i
                         }
-                    out
+                    dat.1 <- dat.list[[2]]
+                    data <- arrange(dat.1, dat.1['key'])
+                    if(length(dat.list)>=3){
+                       for(k in 3:length(dat.list)){
+                           if(is.null(dat.list[[k]])) next
+                           dat.k <- dat.list[[k]]
+                           dat.k <- arrange(dat.k, dat.k['key'])
+                           dat.k <- dat.k[-c(1, 2)]
+                           data <- cbind(data, dat.k)
+                           }
+                       }
+                    ind.t <- c()
+                    for(l in 1:length(ind.list)){
+                        if(is.null(ind.list[[l]])) next
+                        ind.t <- c(ind.t, ind.list[[l]])
+                        }
+                    ind.call <- ind.t[1]
+                    if(length(ind.t)>=2){
+                       for(m in 2:length(ind.t)){
+                           ind.call <- paste0(ind.call, ' + ', ind.t[m])
+                           }
+                       }
+                    for(n in 1:(length(ind.list)-1)){
+                        if(is.null(ind.list[[n]])) next
+                        cont.n <- ind.list[[n]]
+                        for(o in 1:length(cont.n)){
+                            if(is.null(ind.list[[n+1]])) next
+                            cont.o <- ind.list[[n+1]]
+                            for(p in 1:length(cont.o)){
+                                ind.call <- paste0(ind.call, ' + ', cont.n[o], ':', cont.o[p])
+                                }
+                            }
+                        }
+                    aovcall[[1L]] <- quote(stats::aov)
+                    aovcall$formula <- as.formula(paste0(y, ' ~ ', ind.call))
+                    aovcall$data <- quote(data)
+                    fit <- eval(substitute(aovcall))
+                    fit
                     }
