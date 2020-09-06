@@ -433,19 +433,13 @@ corr.test <- function(data, method='pearson', alternative='two.sided',
 #' @export
 omega <- function(anova){
                   contr <- fit_aov(anova)
-                  ncontr <- length(contr)
-                  colect <- vector('list', length=ncontr+1)
-                  var.nam <- c('main_ANOVA', names(contr))
-                  out <- vector('list', length=ncontr+1)
+                  colect <- vector('list', length=2)
                   colect[[1]] <- anova
-                  for(i in 1:ncontr){
-                      colect[[i+1]] <- contr[[i]]
-                      names(colect[[i+1]]) <- names(contr[[i]])
-                      }
-                  nloop <- length(colect)
-                  for(j in 1:nloop){
+                  colect[[2]] <- contr
+                  out <- vector('list', length=2)
+                  names(out) <- c('main_effects', 'contrasts')
+                  for(j in 1:2){
                       loop <- colect[[j]]
-                      if(length(loop)==0) next
                       model <- summary(loop)
                       SSm <- model[[1]][[2]]
                       MSr <- model[[1]][[3]][[length(SSm)]]
@@ -470,7 +464,6 @@ omega <- function(anova){
                       res <- cbind(res, f.square)
                       out[[j]] <- res
                       }
-                  names(out) <- var.nam
                   out
                   }
 
@@ -509,7 +502,7 @@ omega <- function(anova){
 #' fit_aov(simple.model)
 #' fit_aov(depression.model)
 #'
-#' @importFrom dplyr arrange
+#' @importFrom dplyr arrange mutate
 #' @importFrom stats aov
 #'
 #' @export
