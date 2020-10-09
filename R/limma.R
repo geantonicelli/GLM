@@ -153,7 +153,7 @@ limma_fit <- function(object, design=NULL, ndups=1, spacing=1, block=NULL, corre
                       method <- match.arg(method, c('ls', 'robust'))
                       if(ndups>1){
                          if(!is.null(y$probes)) y$probes <- uniquegenelist(y$probes, ndups=ndups, spacing=spacing)
-                         if(!is.null(y$Amean)) y$Amean <- rowMeans(unwrapdups(as.matrix(y$Amean), ndups=ndups, spacing=spacing), na.rm=TRUE)
+                         if(!is.null(y$Amean)) y$Amean <- rowMeans(unwrap_dups(as.matrix(y$Amean), ndups=ndups, spacing=spacing), na.rm=TRUE)
                          }
                       if(method=='robust') fit <- limma_mrlm(y$exprs, design=design, ndups=ndups, spacing=spacing, weights=weights, ...)
                       else if(ndups<2 && is.null(block)) fit <- limma_lm(y$exprs, design=design, ndups=ndups, spacing=spacing, weights=weights)
@@ -225,9 +225,9 @@ limma_lm <- function(M, design=NULL, ndups=1, spacing=1, weights=NULL){
                         M[!is.finite(weights)] <- NA
                         }
                      if(ndups>1){
-                        M <- unwrapdups(M, ndups=ndups, spacing=spacing)
+                        M <- unwrap_dups(M, ndups=ndups, spacing=spacing)
                         design <- design %x% rep_len(1, ndups)
-                        if(!is.null(weights)) weights <- unwrapdups(weights, ndups=ndups, spacing=spacing)
+                        if(!is.null(weights)) weights <- unwrap_dups(weights, ndups=ndups, spacing=spacing)
                         }
                      ngenes <- nrow(M)
                      stdev.unscaled <- beta <- matrix(NA, ngenes, nbeta, dimnames=list(rownames(M), coef.names))
@@ -338,9 +338,9 @@ limma_mrlm <- function(M, design=NULL, ndups=1, spacing=1, weights=NULL, ...){
                           M[!is.finite(weights)] <- NA
                           }
                        if(ndups>1){
-                          M <- unwrapdups(M, ndups=ndups, spacing=spacing)
+                          M <- unwrap_dups(M, ndups=ndups, spacing=spacing)
                           design <- design %x% rep_len(1, ndups)
-                          if(!is.null(weights)) weights <- unwrapdups(weights, ndups=ndups, spacing=spacing)
+                          if(!is.null(weights)) weights <- unwrap_dups(weights, ndups=ndups, spacing=spacing)
                           }
                        ngenes <- nrow(M)
                        stdev.unscaled <- beta <- matrix(NA, ngenes, nbeta, dimnames=list(rownames(M), coef.names))
@@ -373,43 +373,79 @@ limma_mrlm <- function(M, design=NULL, ndups=1, spacing=1, weights=NULL, ...){
                             pivot=QR$pivot, rank=QR$rank, effects=eff, residuals=res)
                        }
 
-#' function to retrieve the contrasts stored in a dataset and fit an ANOVA on
-#'   those
+#' fit a linear model to microarray data by generalized least squares
 #'
-#' this function is a wrapper and an adapter around \code{'\link[stats]{aov}'},
-#'   it retrieves the contrasts for each independent variable specified in an
-#'   aov() model and stored in the original dataset, and fits an ANOVA model on
-#'   all contrasts for each independent variable, in order to obtained the
-#'   computed SS and MS for further calculations, otherwise not available from the
-#'   original ANOVA model as displayed by summary() or summary.lm(), the model
-#'   fitted for all contrasts of one variable is the same as displayed by
-#'   summary.lm() on the original ANOVA model
+#' fit a linear model genewise to expression data from a series of microarrays,
+#' the fit is by generalized least squares method allowing for correlation
+#' between duplicate spots or related arrays, this function is a modified
+#' version of gls.series() from the limma package, it additionally returns
+#' effects and residuals from the fitted models in order to be used by limmaDE()
+#' to calculate genewise sums of squares, mean squares, degree of freedom,
+#' F-statistics and F p-values for the main effects of each linear model, this
+#' is a utility function for limma_fit()
 #'
-#' @param anova an object of class anova data.frame with the ANOVA model created
-#'   by aov(), in the original dataset each variable must be in only one
-#'   column, and all contrasts for each variable should be loaded as contrasts
-#'   for that variable
+#' @param M numeric matrix containing log-ratio or log-expression values for a
+#'   series of microarrays, rows correspond to genes and columns to arrays
+#' @param design numeric design matrix defining the linear model, with rows
+#'   corresponding to arrays and columns to comparisons to be estimated. The
+#'   number of rows must match the number of columns of M. Defaults to the unit
+#'   vector meaning that the arrays are treated as replicates
+#' @param ndups positive integer giving the number of times each gene is printed
+#'   on an array. nrow(M) must be divisible by ndups. Ignored if block is not
+#'   NULL
+#' @param spacing the spacing between the rows of M corresponding to duplicate
+#'   spots, spacing=1 for consecutive spots. Ignored if block is not NULL
+#' @param block vector or factor specifying a blocking variable on the arrays.
+#'   Same length as ncol(M)
+#' @param correlation numeric value specifying the inter-duplicate or
+#'   inter-block correlation
+#' @param weights an optional numeric matrix of the same dimension as M
+#'   containing weights for each spot. If it is of different dimension to M, it
+#'   will be filled out to the same size
+#' @param ... other optional arguments to be passed to dupcor.series()
 #'
-#' @return the function returns the fitted ANOVA models for all the contrasts stored for each variable
+#' @details this is a utility function used by the higher level function
+#'   limmaDE(), therefore most users should not use this function directly but
+#'   should use limmaDE() instead, this function is for fitting gene-wise linear
+#'   models when some of the expression values are correlated, the correlated
+#'   groups may arise from replicate spots on the same array (duplicate spots)
+#'   or from a biological or technical replicate grouping of the arrays, note
+#'   that the correlation is assumed to be constant across genes. If
+#'   correlation=NULL then a call is made to duplicateCorrelation() to estimate
+#'   the correlation
+#'
+#' @return a list with components
+#'   \itemize{
+#'    \item coefficients numeric matrix containing the estimated coefficients
+#'   for each linear model (same number of rows as M, same number of columns
+#'   as design)
+#'    \item stdev.unscaled numeric matrix conformal with coef containing the
+#'   unscaled standard deviations for the coefficient estimators, the standard
+#'   errors are given by stdev.unscaled*sigma
+#'    \item sigma numeric vector containing the residual standard deviation
+#'   for each gene
+#'    \item df.residual numeric vector giving the degrees of freedom
+#'   corresponding to sigma
+#'    \item correlation inter-duplicate or inter-block correlation
+#'    \item qr	QR decomposition of the generalized linear squares problem,
+#'   i.e. the decomposition of design standardized by the Choleski-root of the
+#'   correlation matrix defined by correlation
+#'    \item effects numeric matrix containing the estimated effects for each
+#'   linear model (same number of rows and columns as M)
+#'    \item residuals numeric matrix containing the estimated residuals for each
+#'   linear model (same number of rows and columns as M)
+#'   }
 #'
 #' @author gerardo esteban antonicelli
 #'
 #' @seealso \code{'\link{check_contrasts}'} \code{'\link{omega_factorial}'}
 #'
-#' @aliases \alias{fit_aov}
+#' @aliases \alias{limma_gls}
 #'
 #' @examples
 #' data(gogglesData)
-#' data(depressionData)
-#' goggles.model <- aov(attractiveness ~ gender + alcohol + gender:alcohol, data=gogglesData)
-#' simple.model <- aov(attractiveness ~ simple, data=gogglesData)
-#' depression.model <- aov(diff ~ treat, data=depressionData)
-#' fit_aov(goggles.model)
-#' fit_aov(simple.model)
-#' fit_aov(depression.model)
 #'
-#' @importFrom dplyr arrange mutate
-#' @importFrom stats aov
+#' @importFrom stats lm.fit
 #'
 #' @export
 limma_gls <- function(M, design=NULL, ndups=2, spacing=1, block=NULL, correlation=NULL, weights=NULL, ...){
@@ -441,8 +477,8 @@ limma_gls <- function(M, design=NULL, ndups=2, spacing=1, block=NULL, correlatio
                             }
                         cormatrix <- diag(rep_len(correlation, narrays), nrow=narrays, ncol=narrays) %x% array(1, c(ndups, ndups))
                         if(is.null(spacing)) spacing <- 1
-                        M <- unwrapdups(M, ndups=ndups, spacing=spacing)
-                        if(!is.null(weights)) weights <- unwrapdups(weights, ndups=ndups, spacing=spacing)
+                        M <- unwrap_dups(M, ndups=ndups, spacing=spacing)
+                        if(!is.null(weights)) weights <- unwrap_dups(weights, ndups=ndups, spacing=spacing)
                         design <- design %x% rep_len(1, ndups)
                         colnames(design) <- coef.names
                         ngenes <- nrow(M)
@@ -535,43 +571,45 @@ limma_gls <- function(M, design=NULL, ndups=2, spacing=1, block=NULL, correlatio
                            correlation=correlation, cov.coefficients=cov.coef, pivot=QR$pivot, rank=QR$rank)
                       }
 
-#' function to retrieve the contrasts stored in a dataset and fit an ANOVA on
-#'   those
+#' extract basic data from expression data objects
 #'
-#' this function is a wrapper and an adapter around \code{'\link[stats]{aov}'},
-#'   it retrieves the contrasts for each independent variable specified in an
-#'   aov() model and stored in the original dataset, and fits an ANOVA model on
-#'   all contrasts for each independent variable, in order to obtained the
-#'   computed SS and MS for further calculations, otherwise not available from the
-#'   original ANOVA model as displayed by summary() or summary.lm(), the model
-#'   fitted for all contrasts of one variable is the same as displayed by
-#'   summary.lm() on the original ANOVA model
+#' given an expression data object of any known class, get the expression
+#' values, weights, probe annotation and A-values that are needed for linear
+#' modelling. This function is called by the linear modelling functions in the
+#' limma package or by limmaDE() in the GLM package
 #'
-#' @param anova an object of class anova data.frame with the ANOVA model created
-#'   by aov(), in the original dataset each variable must be in only one
-#'   column, and all contrasts for each variable should be loaded as contrasts
-#'   for that variable
+#' @param object any matrix-like object containing log-expression values, it can
+#'   be an object of class MAList, EList, marrayNorm, PLMset, vsn, or any class
+#'   inheriting from ExpressionSet, or any object that can be coerced to a
+#'   numeric matrix
+#' @details rows correspond to probes and columns to RNA samples in the case of
+#'   two-color microarray data objects (MAList or marrayNorm), Amean is the
+#'   vector of row means of the matrix of A-values. For other data objects,
+#'   Amean is the vector of row means of the matrix of expression values. from
+#'   April 2013, the rownames of the output exprs matrix are required to be
+#'   unique. If object has no row names, then the output rownames of exprs are
+#'   1:nrow(object). If object has row names but with duplicated names, then the
+#'   rownames of exprs are set to 1:nrow(object) and the original row names are
+#'   preserved in the ID column of probes. object should be a normalized data
+#'   object. getEAWP will return an error if object is a non-normalized data
+#'   object such as RGList or EListRaw, because these do not contain
+#'   log-expression values
 #'
-#' @return the function returns the fitted ANOVA models for all the contrasts stored for each variable
+#' @return a list with components * exprs numeric matrix of log-ratios,
+#'   log-intensities or log-expression values * weights numeric matrix of
+#'   weights * probes data.frame of probe-annotation * Amean numeric vector of
+#'   average log-expression for each probe
+#'
+#'   exprs is the only required component, the other components will be NULL if
+#'   not found in the input object
 #'
 #' @author gerardo esteban antonicelli
 #'
 #' @seealso \code{'\link{check_contrasts}'} \code{'\link{omega_factorial}'}
 #'
-#' @aliases \alias{fit_aov}
+#' @aliases \alias{extEAWP}
 #'
-#' @examples
-#' data(gogglesData)
-#' data(depressionData)
-#' goggles.model <- aov(attractiveness ~ gender + alcohol + gender:alcohol, data=gogglesData)
-#' simple.model <- aov(attractiveness ~ simple, data=gogglesData)
-#' depression.model <- aov(diff ~ treat, data=depressionData)
-#' fit_aov(goggles.model)
-#' fit_aov(simple.model)
-#' fit_aov(depression.model)
-#'
-#' @importFrom dplyr arrange mutate
-#' @importFrom stats aov
+#' @importFrom Biobase exprs assayDataElementNames assayDataElement
 #'
 #' @export
 extEAWP <- function(object){
@@ -584,7 +622,7 @@ extEAWP <- function(object){
                       else{if(is(object, 'EListRaw')) stop('EListRaw object: please normalize first')
                            if(is(object, 'RGList')) stop('RGList object: please normalize first')
                            y$printer <- object$printer
-                           if(is.null(object$M)) stop("data object isn't of a recognized data class")
+                           if(is.null(object$M)) stop('data object is not of a recognized data class')
                            y$exprs <- as.matrix(object$M)
                            if(!is.null(object$A)) y$Amean <- rowMeans(as.matrix(object$A), na.rm=TRUE)
                            }
@@ -634,43 +672,27 @@ extEAWP <- function(object){
                     y
                     }
 
-#' function to retrieve the contrasts stored in a dataset and fit an ANOVA on
-#'   those
+#' function to report which coefficients in a linear model cannot be estimated
 #'
-#' this function is a wrapper and an adapter around \code{'\link[stats]{aov}'},
-#'   it retrieves the contrasts for each independent variable specified in an
-#'   aov() model and stored in the original dataset, and fits an ANOVA model on
-#'   all contrasts for each independent variable, in order to obtained the
-#'   computed SS and MS for further calculations, otherwise not available from the
-#'   original ANOVA model as displayed by summary() or summary.lm(), the model
-#'   fitted for all contrasts of one variable is the same as displayed by
-#'   summary.lm() on the original ANOVA model
+#' the function nonEstimable() from the limma package is used by lmFit() to
+#' report which coefficients in a linear model cannot be estimated, the function
+#' nonEst() in the GLM package is identical to nonEstimable() and it's used by
+#' limma_fit()
 #'
-#' @param anova an object of class anova data.frame with the ANOVA model created
-#'   by aov(), in the original dataset each variable must be in only one
-#'   column, and all contrasts for each variable should be loaded as contrasts
-#'   for that variable
+#' @param x a numeric matrix or vector
 #'
-#' @return the function returns the fitted ANOVA models for all the contrasts stored for each variable
+#' @return the function returns a character vector of names for the columns of x
+#'   which are linearly dependent on previous columns. If x has full column
+#'   rank, then the value is NULL
 #'
 #' @author gerardo esteban antonicelli
 #'
 #' @seealso \code{'\link{check_contrasts}'} \code{'\link{omega_factorial}'}
 #'
-#' @aliases \alias{fit_aov}
+#' @aliases \alias{nonEst}
 #'
 #' @examples
 #' data(gogglesData)
-#' data(depressionData)
-#' goggles.model <- aov(attractiveness ~ gender + alcohol + gender:alcohol, data=gogglesData)
-#' simple.model <- aov(attractiveness ~ simple, data=gogglesData)
-#' depression.model <- aov(diff ~ treat, data=depressionData)
-#' fit_aov(goggles.model)
-#' fit_aov(simple.model)
-#' fit_aov(depression.model)
-#'
-#' @importFrom dplyr arrange mutate
-#' @importFrom stats aov
 #'
 #' @export
 nonEst <- function(x){
@@ -687,3 +709,38 @@ nonEst <- function(x){
                       }
                    else{return(NULL)}
                    }
+
+#' function to report which coefficients in a linear model cannot be estimated
+#'
+#' the function nonEstimable() from the limma package is used by lmFit() to
+#' report which coefficients in a linear model cannot be estimated, the function
+#' nonEst() in the GLM package is identical to nonEstimable() and it's used by
+#' limma_fit()
+#'
+#' @param x a numeric matrix or vector
+#'
+#' @return the function returns a character vector of names for the columns of x
+#'   which are linearly dependent on previous columns. If x has full column
+#'   rank, then the value is NULL
+#'
+#' @author gerardo esteban antonicelli
+#'
+#' @seealso \code{'\link{check_contrasts}'} \code{'\link{omega_factorial}'}
+#'
+#' @aliases \alias{unwrap_dups}
+#'
+#' @examples
+#' data(gogglesData)
+#'
+#' @export
+unwrap_dups <- function(M, ndups=2, spacing=1){
+                        if(ndups==1) return(M)
+                        M <- as.matrix(M)
+                        nspots <- dim(M)[1]
+                        nslides <- dim(M)[2]
+                        ngroups <- nspots/ndups/spacing
+                        dim(M) <- c(spacing, ndups, ngroups, nslides)
+                        M <- aperm(M, perm=c(1, 3, 2, 4))
+                        dim(M) <- c(spacing*ngroups, ndups*nslides)
+                        M
+                        }

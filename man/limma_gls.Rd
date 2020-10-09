@@ -2,9 +2,8 @@
 % Please edit documentation in R/limma.R
 \name{limma_gls}
 \alias{limma_gls}
-\alias{\alias{fit_aov}}
-\title{function to retrieve the contrasts stored in a dataset and fit an ANOVA on
-those}
+\alias{\alias{limma_gls}}
+\title{fit a linear model to microarray data by generalized least squares}
 \usage{
 limma_gls(
   M,
@@ -18,33 +17,79 @@ limma_gls(
 )
 }
 \arguments{
-\item{anova}{an object of class anova data.frame with the ANOVA model created
-by aov(), in the original dataset each variable must be in only one
-column, and all contrasts for each variable should be loaded as contrasts
-for that variable}
+\item{M}{numeric matrix containing log-ratio or log-expression values for a
+series of microarrays, rows correspond to genes and columns to arrays}
+
+\item{design}{numeric design matrix defining the linear model, with rows
+corresponding to arrays and columns to comparisons to be estimated. The
+number of rows must match the number of columns of M. Defaults to the unit
+vector meaning that the arrays are treated as replicates}
+
+\item{ndups}{positive integer giving the number of times each gene is printed
+on an array. nrow(M) must be divisible by ndups. Ignored if block is not
+NULL}
+
+\item{spacing}{the spacing between the rows of M corresponding to duplicate
+spots, spacing=1 for consecutive spots. Ignored if block is not NULL}
+
+\item{block}{vector or factor specifying a blocking variable on the arrays.
+Same length as ncol(M)}
+
+\item{correlation}{numeric value specifying the inter-duplicate or
+inter-block correlation}
+
+\item{weights}{an optional numeric matrix of the same dimension as M
+containing weights for each spot. If it is of different dimension to M, it
+will be filled out to the same size}
+
+\item{...}{other optional arguments to be passed to dupcor.series()}
 }
 \value{
-the function returns the fitted ANOVA models for all the contrasts stored for each variable
+a list with components
+\itemize{
+\item coefficients numeric matrix containing the estimated coefficients
+for each linear model (same number of rows as M, same number of columns
+as design)
+\item stdev.unscaled numeric matrix conformal with coef containing the
+unscaled standard deviations for the coefficient estimators, the standard
+errors are given by stdev.unscaled*sigma
+\item sigma numeric vector containing the residual standard deviation
+for each gene
+\item df.residual numeric vector giving the degrees of freedom
+corresponding to sigma
+\item correlation inter-duplicate or inter-block correlation
+\item qr	QR decomposition of the generalized linear squares problem,
+i.e. the decomposition of design standardized by the Choleski-root of the
+correlation matrix defined by correlation
+\item effects numeric matrix containing the estimated effects for each
+linear model (same number of rows and columns as M)
+\item residuals numeric matrix containing the estimated residuals for each
+linear model (same number of rows and columns as M)
+}
 }
 \description{
-this function is a wrapper and an adapter around \code{'\link[stats]{aov}'},
-it retrieves the contrasts for each independent variable specified in an
-aov() model and stored in the original dataset, and fits an ANOVA model on
-all contrasts for each independent variable, in order to obtained the
-computed SS and MS for further calculations, otherwise not available from the
-original ANOVA model as displayed by summary() or summary.lm(), the model
-fitted for all contrasts of one variable is the same as displayed by
-summary.lm() on the original ANOVA model
+fit a linear model genewise to expression data from a series of microarrays,
+the fit is by generalized least squares method allowing for correlation
+between duplicate spots or related arrays, this function is a modified
+version of gls.series() from the limma package, it additionally returns
+effects and residuals from the fitted models in order to be used by limmaDE()
+to calculate genewise sums of squares, mean squares, degree of freedom,
+F-statistics and F p-values for the main effects of each linear model, this
+is a utility function for limma_fit()
+}
+\details{
+this is a utility function used by the higher level function
+limmaDE(), therefore most users should not use this function directly but
+should use limmaDE() instead, this function is for fitting gene-wise linear
+models when some of the expression values are correlated, the correlated
+groups may arise from replicate spots on the same array (duplicate spots)
+or from a biological or technical replicate grouping of the arrays, note
+that the correlation is assumed to be constant across genes. If
+correlation=NULL then a call is made to duplicateCorrelation() to estimate
+the correlation
 }
 \examples{
 data(gogglesData)
-data(depressionData)
-goggles.model <- aov(attractiveness ~ gender + alcohol + gender:alcohol, data=gogglesData)
-simple.model <- aov(attractiveness ~ simple, data=gogglesData)
-depression.model <- aov(diff ~ treat, data=depressionData)
-fit_aov(goggles.model)
-fit_aov(simple.model)
-fit_aov(depression.model)
 
 }
 \seealso{
