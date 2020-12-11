@@ -46,24 +46,24 @@ will be filled out to the same size}
 }
 \value{
 a list with components
-\itemize{
-\item coefficients numeric matrix containing the estimated coefficients
+\tabular{ll}{
+coefficients \tab numeric matrix containing the estimated coefficients
 for each linear model (same number of rows as M, same number of columns
-as design)
-\item stdev.unscaled numeric matrix conformal with coef containing the
+as design)\cr\cr
+stdev.unscaled \tab numeric matrix conformal with coef containing the
 unscaled standard deviations for the coefficient estimators, the standard
-errors are given by stdev.unscaled*sigma
-\item sigma numeric vector containing the residual standard deviation
-for each gene
-\item df.residual numeric vector giving the degrees of freedom
-corresponding to sigma
-\item correlation inter-duplicate or inter-block correlation
-\item qr	QR decomposition of the generalized linear squares problem,
+errors are given by stdev.unscaled*sigma\cr\cr
+sigma \tab numeric vector containing the residual standard deviation
+for each gene\cr\cr
+df.residual \tab numeric vector giving the degrees of freedom
+corresponding to sigma\cr\cr
+correlation \tab inter-duplicate or inter-block correlation\cr\cr
+qr \tab QR decomposition of the generalized linear squares problem,
 i.e. the decomposition of design standardized by the Choleski-root of the
-correlation matrix defined by correlation
-\item effects numeric matrix containing the estimated effects for each
-linear model (same number of rows and columns as M)
-\item residuals numeric matrix containing the estimated residuals for each
+correlation matrix defined by correlation\cr\cr
+effects \tab numeric matrix containing the estimated effects for each
+linear model (same number of rows and columns as M)\cr\cr
+residuals \tab numeric matrix containing the estimated residuals for each
 linear model (same number of rows and columns as M)
 }
 }

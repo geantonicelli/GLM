@@ -15,7 +15,27 @@ column, and all contrasts for each variable should be loaded as contrasts
 for that variable}
 }
 \value{
-the function returns the fitted ANOVA models for all the contrasts stored for each variable
+a list with components
+\tabular{ll}{
+coefficients \tab numeric matrix containing the estimated coefficients
+for each linear model (same number of rows as M, same number of columns
+as design)\cr
+stdev.unscaled \tab numeric matrix conformal with coef containing the
+unscaled standard deviations for the coefficient estimators, the standard
+errors are given by stdev.unscaled*sigma\cr
+sigma \tab numeric vector containing the residual standard deviation
+for each gene\cr
+df.residual \tab numeric vector giving the degrees of freedom
+corresponding to sigma\cr
+correlation \tab inter-duplicate or inter-block correlation\cr
+qr \tab QR decomposition of the generalized linear squares problem,
+i.e. the decomposition of design standardized by the Choleski-root of the
+correlation matrix defined by correlation\cr
+effects \tab numeric matrix containing the estimated effects for each
+linear model (same number of rows and columns as M)\cr
+residuals \tab numeric matrix containing the estimated residuals for each
+linear model (same number of rows and columns as M)
+}
 }
 \description{
 this function is a wrapper and an adapter around \code{'\link[stats]{aov}'},

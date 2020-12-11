@@ -284,24 +284,46 @@ limma_lm <- function(M, design=NULL, ndups=1, spacing=1, weights=NULL){
                           df.residual=df.residual, cov.coefficients=cov.coef, pivot=QR$pivot, rank=QR$rank)
                      }
 
-#' function to retrieve the contrasts stored in a dataset and fit an ANOVA on
-#'   those
+#' fit a linear model to microrray data by robust regression
 #'
-#' this function is a wrapper and an adapter around \code{'\link[stats]{aov}'},
-#'   it retrieves the contrasts for each independent variable specified in an
-#'   aov() model and stored in the original dataset, and fits an ANOVA model on
-#'   all contrasts for each independent variable, in order to obtained the
-#'   computed SS and MS for further calculations, otherwise not available from the
-#'   original ANOVA model as displayed by summary() or summary.lm(), the model
-#'   fitted for all contrasts of one variable is the same as displayed by
-#'   summary.lm() on the original ANOVA model
+#' fit a linear model genewise to expression data from a series of arrays, the
+#' fit is by robust M-estimation allowing for a small proportion of outliers,
+#' this function is a modified version of mrlm() from the limma package, it
+#' additionally returns effects and residuals from the fitted models in order to
+#' be used by limmaDE() to calculate genewise sums of squares, mean squares,
+#' degree of freedom, F-statistics and F p-values for the main effects of each
+#' linear model, this is a utility function for limma_fit()
 #'
-#' @param anova an object of class anova data.frame with the ANOVA model created
-#'   by aov(), in the original dataset each variable must be in only one
-#'   column, and all contrasts for each variable should be loaded as contrasts
-#'   for that variable
+#' @param M	numeric matrix containing log-ratio or log-expression values for a
+#'   series of microarrays, rows correspond to genes and columns to arrays
+#' @param design numeric design matrix defining the linear model, with rows
+#'   corresponding to arrays and columns to comparisons to be estimated, the
+#'   number of rows must match the number of columns of M, defaults to the unit
+#'   vector meaning that the arrays are treated as replicates
+#' @param ndups a positive integer giving the number of times each gene is
+#'   printed on an array, nrow(M) must be divisible by ndups
+#' @param spacing the spacing between the rows of M corresponding to duplicate
+#'   spots, spacing=1 for consecutive spots
+#' @param weights numeric matrix of the same dimension as M containing weights.
+#'   If it is of different dimension to M, it will be filled out to the same
+#'   size. NULL is equivalent to equal weights
+#' @param ...	any other arguments are passed to rlm.default
 #'
-#' @return the function returns the fitted ANOVA models for all the contrasts stored for each variable
+#' @return a list with components \tabular{ll}{ coefficients \tab numeric matrix
+#'   containing the estimated coefficients for each linear model (same number of
+#'   rows as M, same number of columns as design)\cr stdev.unscaled \tab numeric
+#'   matrix conformal with coef containing the unscaled standard deviations for
+#'   the coefficient estimators, the standard errors are given by
+#'   stdev.unscaled*sigma\cr sigma \tab numeric vector containing the residual
+#'   standard deviation for each gene\cr df.residual \tab numeric vector giving
+#'   the degrees of freedom corresponding to sigma\cr correlation \tab
+#'   inter-duplicate or inter-block correlation\cr qr \tab QR decomposition of
+#'   the generalized linear squares problem, i.e. the decomposition of design
+#'   standardized by the Choleski-root of the correlation matrix defined by
+#'   correlation\cr effects \tab numeric matrix containing the estimated effects
+#'   for each linear model (same number of rows and columns as M)\cr residuals
+#'   \tab numeric matrix containing the estimated residuals for each linear
+#'   model (same number of rows and columns as M) }
 #'
 #' @author gerardo esteban antonicelli
 #'
@@ -415,24 +437,24 @@ limma_mrlm <- function(M, design=NULL, ndups=1, spacing=1, weights=NULL, ...){
 #'   the correlation
 #'
 #' @return a list with components
-#'   \itemize{
-#'    \item coefficients numeric matrix containing the estimated coefficients
+#'  \tabular{ll}{
+#'  coefficients \tab numeric matrix containing the estimated coefficients
 #'   for each linear model (same number of rows as M, same number of columns
-#'   as design)
-#'    \item stdev.unscaled numeric matrix conformal with coef containing the
+#'   as design)\cr\cr
+#'  stdev.unscaled \tab numeric matrix conformal with coef containing the
 #'   unscaled standard deviations for the coefficient estimators, the standard
-#'   errors are given by stdev.unscaled*sigma
-#'    \item sigma numeric vector containing the residual standard deviation
-#'   for each gene
-#'    \item df.residual numeric vector giving the degrees of freedom
-#'   corresponding to sigma
-#'    \item correlation inter-duplicate or inter-block correlation
-#'    \item qr	QR decomposition of the generalized linear squares problem,
+#'   errors are given by stdev.unscaled*sigma\cr\cr
+#'  sigma \tab numeric vector containing the residual standard deviation
+#'   for each gene\cr\cr
+#'  df.residual \tab numeric vector giving the degrees of freedom
+#'   corresponding to sigma\cr\cr
+#'  correlation \tab inter-duplicate or inter-block correlation\cr\cr
+#'  qr \tab QR decomposition of the generalized linear squares problem,
 #'   i.e. the decomposition of design standardized by the Choleski-root of the
-#'   correlation matrix defined by correlation
-#'    \item effects numeric matrix containing the estimated effects for each
-#'   linear model (same number of rows and columns as M)
-#'    \item residuals numeric matrix containing the estimated residuals for each
+#'   correlation matrix defined by correlation\cr\cr
+#'  effects \tab numeric matrix containing the estimated effects for each
+#'   linear model (same number of rows and columns as M)\cr\cr
+#'  residuals \tab numeric matrix containing the estimated residuals for each
 #'   linear model (same number of rows and columns as M)
 #'   }
 #'
